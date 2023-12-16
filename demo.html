@@ -36,10 +36,14 @@
             // remove alpha channel
             let pixels = []
             for (let i = 0; i < imageData.length; i += 4) {
-              pixels.push(imageData[i] / 255)
-              pixels.push(imageData[i + 1] / 255)
-              pixels.push(imageData[i + 2] / 255)
+              pixels.push(imageData[i])
+              pixels.push(imageData[i + 1])
+              pixels.push(imageData[i + 2])
             }
+            // Normalize the pixels [0, 255] to be between [-1, 1].
+            const mean = 127.5;
+            const std = 128;
+            pixels = pixels.map(val => (val - mean) / std);
             // 轉換為 C x H x W 格式
             const transposedImage = new Float32Array(3 * canvas.height * canvas.width);
             for (let c = 0; c < 3; c++) {
