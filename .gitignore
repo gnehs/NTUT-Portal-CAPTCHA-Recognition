@@ -69,3 +69,4 @@ models/*
 !models/pretrained
 .DS_Store
 node_modules
+prepros.config
