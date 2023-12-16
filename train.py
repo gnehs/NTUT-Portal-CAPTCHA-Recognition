@@ -13,15 +13,17 @@ class Net(nn.Module):
     def __init__(self, gpu=False):
         super(Net, self).__init__()
         # size: 3 * 39 * 135
-        self.conv1 = nn.Conv2d(3, 18, 5)  # 18 * 32 * 116
-        self.pool1 = nn.MaxPool2d(2)  # 18 * 16 * 58
-        self.conv2 = nn.Conv2d(18, 48, 5)  # 48 * 12 * 54
-        self.pool2 = nn.MaxPool2d(2)  # 48 * 6 * 27
-        # flatten here
+        self.conv1 = nn.Conv2d(3, 18, 8)
+        self.pool1 = nn.MaxPool2d(2)
+        self.conv2 = nn.Conv2d(18, 48, 8)
+        self.pool2 = nn.MaxPool2d(2)
         self.drop = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(48 * 6 * 27, 360)
-        self.fc2 = nn.Linear(360, 19 * 4)
-
+        x = torch.randn(1, 3, 39, 135)
+        x = self.pool2(F.relu(self.conv2(self.pool1(F.relu(self.conv1(x))))))
+        self.features_size = torch.prod(torch.tensor(x.size()[1:]))
+        self.fc1 = nn.Linear(self.features_size, 360)
+        self.fc2 = nn.Linear(360, 4 * 26) 
+        
         if gpu:
             self.to(DEVICE)
             if str(DEVICE) == 'cpu':
@@ -34,12 +36,11 @@ class Net(nn.Module):
         x = self.pool1(x)
         x = F.relu(self.conv2(x))
         x = self.pool2(x)
-        x = x.view(-1, 48 * 6 * 27)  # flatten here
+        x = x.view(-1, self.features_size)
         x = self.drop(x)
         x = F.relu(self.fc1(x))
-        x = self.fc2(x).view(-1, 4, 19)
-        x = F.softmax(x, dim=2)
-        x = x.view(-1, 4 * 19)
+        x = self.fc2(x)
+        x = x.view(-1, 4, 26)
         return x
 
     def save(self, name, folder='./models'):
@@ -64,30 +65,37 @@ class Net(nn.Module):
 def loss_batch(model, loss_func, data, opt=None):
     xb, yb = data['image'], data['label']
     batch_size = len(xb)
+
+    # Forward pass
     out = model(xb)
+
+    # Need to reshape yb to be the same as out if not the same
+    if yb.shape != out.shape:
+        yb = yb.view(out.shape)
+
+    # Compute loss
     loss = loss_func(out, yb)
 
     single_correct, whole_correct = 0, 0
     if opt is not None:
+        # Zero grad, backward pass and weight update
         opt.zero_grad()
         loss.backward()
         opt.step()
-    else:  # calc accuracy
-        yb = yb.view(-1, 4, 19)
-        out_matrix = out.view(-1, 4, 19)
-        _, ans = torch.max(yb, 2)
-        _, predicted = torch.max(out_matrix, 2)
+    else:
+        # calculate accuracy
+        _, ans = torch.max(yb, dim=2)
+        _, predicted = torch.max(out, dim=2)
         compare = (predicted == ans)
         single_correct = compare.sum().item()
         for i in range(batch_size):
             if compare[i].sum().item() == 4:
                 whole_correct += 1
-        del out_matrix
+
     loss_item = loss.item()
     del out
     del loss
     return loss_item, single_correct, whole_correct, batch_size
-
 
 def fit(epochs, model, loss_func, opt, train_dl, valid_dl, verbose=None):
     max_acc = 0
@@ -138,9 +146,9 @@ def train(use_gpu=True):
     train_dl, valid_dl = load_data(batch_size=4, split_rate=0.2, gpu=use_gpu)
     model = Net(use_gpu)
     opt = optim.Adadelta(model.parameters())
-    criterion = nn.BCELoss()  # loss function
+    criterion = nn.BCEWithLogitsLoss()   # loss function
     start = timer()
-    fit(30, model, criterion, opt, train_dl, valid_dl, 500)
+    fit(50, model, criterion, opt, train_dl, valid_dl, 500)
     end = timer()
     t = human_time(start, end)
     print('Total training time using {}: {}'.format(model.device, t))

@@ -68,3 +68,4 @@ models/*
 !.gitkeep
 !models/pretrained
 .DS_Store
+node_modules

@@ -47,7 +47,7 @@ class ImgToTensor(object):
     def __call__(self, sample):
         np_img = np.asarray(sample['image'])
         image = np_img.transpose((2, 0, 1))  # H x W x C  -->  C x H x W
-        sample['image'] = torch.from_numpy(image).float()
+        sample['image'] = torch.from_numpy(np.copy(image)).float()
         return sample
 
 
