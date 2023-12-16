@@ -8,22 +8,26 @@
   <!-- Include onnxjs library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/onnxruntime-web/1.16.3/ort.webgpu.min.js"></script>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     .container {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       gap: 8px;
-      width: calc(100vw - 32px);
-      max-width: 512px;
       margin: 16px auto;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border: 1px solid #ccc;
       padding: 16px;
       border-radius: 8px;
+      width: min(calc(100vw - 32px), 512px);
     }
 
     #result {
       font-size: 12px;
       font-family: monospace;
+      opacity: 0.75;
     }
 
     #imageCanvas {
@@ -36,20 +40,21 @@
 <body>
   <div class="container">
     <canvas id="imageCanvas" width="135" height="39"></canvas>
-    <input type="file" id="imageInput" accept="image/*" onchange="loadImage()">
+    <input type="file" id="imageInput" accept="image/*">
     <div id="result">
       Upload an image to start
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    setResult("Model loading...");
+    const session = await ort.InferenceSession.create("/model.onnx");
+    setResult("Upload an image to start.");
     function setResult(result) {
       document.getElementById('result').innerText = result;
     }
     async function loadImage() {
-      setResult("Model loading...");
-      const session = await ort.InferenceSession.create("/model.onnx");
-      setResult("Model loaded");
+      setResult("Image loading...");
       const inputElement = document.getElementById('imageInput');
       const canvas = document.getElementById('imageCanvas');
       const ctx = canvas.getContext('2d', { alpha: false });
@@ -123,6 +128,7 @@
         reader.readAsDataURL(file);
       }
     }
+    document.getElementById('imageInput').addEventListener('change', loadImage);
   </script>
 </body>
 
