@@ -12,7 +12,7 @@ from timeit import default_timer as timer
 class Net(nn.Module):
     def __init__(self, gpu=False):
         super(Net, self).__init__()
-        # size: 3 * 36 * 120
+        # size: 3 * 39 * 135
         self.conv1 = nn.Conv2d(3, 18, 5)  # 18 * 32 * 116
         self.pool1 = nn.MaxPool2d(2)  # 18 * 16 * 58
         self.conv2 = nn.Conv2d(18, 48, 5)  # 48 * 12 * 54
@@ -56,7 +56,7 @@ class Net(nn.Module):
         self.eval()
 
     def graph(self):
-        x = torch.rand(1, 3, 36, 120)
+        x = torch.rand(1, 3, 39, 135)
         y = self(x)
         return make_dot(y, params=dict(self.named_parameters()))
 

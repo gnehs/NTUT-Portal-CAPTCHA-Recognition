@@ -6,8 +6,7 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import transforms, functional
 
-CHARS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K', 'M',
-         'N', 'P', 'R', 'T', 'U', 'V', 'W', 'X', 'Y']
+CHARS = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 ONE_HOT = torch.eye(len(CHARS))
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -71,7 +70,7 @@ def load_data(batch_size=4, max_m=-1, split_rate=0.2, gpu=True):
     # list images
     wd, _ = os.path.split(os.path.abspath(__file__))
     folder = os.path.join(wd, 'data')
-    imgs = [i for i in os.listdir(folder) if i.endswith('jpg')]
+    imgs = [i for i in os.listdir(folder) if i.endswith('png')]
     if not imgs:
         raise Exception('Empty folder!')
     random.seed(1)
