@@ -7,16 +7,49 @@
   <title>ONNX Model Inference with Image Input</title>
   <!-- Include onnxjs library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/onnxruntime-web/1.16.3/ort.webgpu.min.js"></script>
+  <style>
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      width: calc(100vw - 32px);
+      max-width: 512px;
+      margin: 16px auto;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      padding: 16px;
+      border-radius: 8px;
+    }
+
+    #result {
+      font-size: 12px;
+      font-family: monospace;
+    }
+
+    #imageCanvas {
+      /* The image will be drawn on this canvas */
+      border: 1px solid #ccc;
+    }
+  </style>
 </head>
 
 <body>
-  <canvas id="imageCanvas" width="135" height="39"></canvas>
-  <input type="file" id="imageInput" accept="image/*" onchange="loadImage()">
+  <div class="container">
+    <canvas id="imageCanvas" width="135" height="39"></canvas>
+    <input type="file" id="imageInput" accept="image/*" onchange="loadImage()">
+    <div id="result">
+      Upload an image to start
+    </div>
+  </div>
 
   <script>
-
+    function setResult(result) {
+      document.getElementById('result').innerText = result;
+    }
     async function loadImage() {
+      setResult("Model loading...");
       const session = await ort.InferenceSession.create("/model.onnx");
+      setResult("Model loaded");
       const inputElement = document.getElementById('imageInput');
       const canvas = document.getElementById('imageCanvas');
       const ctx = canvas.getContext('2d', { alpha: false });
@@ -62,7 +95,7 @@
             }
 
             const inputTensor = new ort.Tensor('float32', new Float32Array(transposedImage), [1, 3, canvas.height, canvas.width]);
-
+            setResult("Image processed");
             // Run inference
             session.run({ input: inputTensor }).then((output) => {
               // output.output.data is length 26*4 of possible alphabets
@@ -80,6 +113,7 @@
                 outputString += possibleAlphabets[maxIndex];
               }
               console.log("Output string:", outputString);
+              setResult("Output string: " + outputString);
             }).catch((err) => {
               console.error("Error running inference:", err);
             });
