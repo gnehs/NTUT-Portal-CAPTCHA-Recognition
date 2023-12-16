@@ -16,12 +16,14 @@ class Convert(object):
         torch.onnx.export(self.net,                    # PyTorch Model
                           torch.rand(1, 3, 39, 135),   # Input tensor
                           "./model.onnx",              # ONNX file path
-                          verbose=True,
+                          verbose=False,
                           # Input tensor name
                           input_names=['input'],
                           # Output tensor name
                           output_names=['output'],
-                          dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}})
+                          dynamic_axes={'input': {0: 'batch_size'},
+                                        'output': {0: 'batch_size'}},
+                          export_params=True)
 
 
 if __name__ == '__main__':
