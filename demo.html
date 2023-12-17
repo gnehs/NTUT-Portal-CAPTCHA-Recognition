@@ -48,7 +48,8 @@
 
   <script type="module">
     setResult("Model loading...");
-    const session = await ort.InferenceSession.create("/model.onnx");
+    const modelPath = location.origin === 'localhost' ? '/model.onnx' : 'https://gnehs.github.io/NTUT-Portal-CAPTCHA-Recognition/model.onnx';
+    const session = await ort.InferenceSession.create(modelPath);
     setResult("Upload an image to start.");
     function setResult(result) {
       document.getElementById('result').innerText = result;
